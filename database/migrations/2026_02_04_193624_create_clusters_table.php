@@ -25,7 +25,7 @@ return new class extends Migration
             $table->decimal('price_range_min', 15, 2)->nullable();
             $table->decimal('price_range_max', 15, 2)->nullable();
             $table->unsignedBigInteger('developer_id')->nullable();
-            $table->foreign('developer_id')->references('id')->on('companies')->onDelete('set null');
+            // Removed foreign key constraint to companies table
             $table->year('year_built')->nullable();
             $table->json('facilities')->nullable(); // JSON array of facilities
             $table->boolean('is_active')->default(true);

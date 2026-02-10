@@ -32,8 +32,7 @@ class Cluster extends Model
         'price_range_max' => 'decimal:2',
         'is_active' => 'boolean',
         'year_built' => 'integer',
-        'total_units' => 'integer',
-        'available_units' => 'integer',
+        'facilities' => 'array',
     ];
 
     public function units(): HasMany
@@ -41,21 +40,21 @@ class Cluster extends Model
         return $this->hasMany(Unit::class);
     }
 
-    public function developer()
-    {
-        return $this->belongsTo(Company::class, 'developer_id');
-    }
-
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
     }
 
-    public function updateStats()
+    // Accessor for total units
+    public function getTotalUnitsAttribute()
     {
-        $this->total_units = $this->units()->count();
-        $this->available_units = $this->units()->where('status', 'available')->count();
-        $this->save();
+        return $this->units()->count();
+    }
+
+    // Accessor for available units
+    public function getAvailableUnitsAttribute()
+    {
+        return $this->units()->where('status', 'available')->count();
     }
 
     // Accessor for formatted price range

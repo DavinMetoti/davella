@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
-use App\Models\Company;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
@@ -26,46 +25,24 @@ class UserSeeder extends Seeder
         ]);
         $superAdmin->assignRole('super_admin');
 
-        // Get all companies
-        $companies = Company::all();
+        // Create owner
+        $owner = User::create([
+            'name' => 'Owner User',
+            'email' => 'owner@davella.com',
+            'password' => Hash::make('password'),
+            'role' => 'Owner',
+            'is_active' => true,
+        ]);
+        $owner->assignRole('Owner');
 
-        foreach ($companies as $company) {
-            // Create owner
-            $owner = User::create([
-                'name' => 'Owner ' . $company->name,
-                'email' => 'owner' . $company->id . '@davella.com',
-                'password' => Hash::make('password'),
-                'company_id' => $company->id,
-                'role' => 'owner',
-                'is_active' => true,
-            ]);
-            $owner->assignRole('owner');
-
-            // Create 2 admins
-            for ($i = 1; $i <= 2; $i++) {
-                $admin = User::create([
-                    'name' => 'Admin ' . $i . ' ' . $company->name,
-                    'email' => 'admin' . $i . $company->id . '@davella.com',
-                    'password' => Hash::make('password'),
-                    'company_id' => $company->id,
-                    'role' => 'admin',
-                    'is_active' => true,
-                ]);
-                $admin->assignRole('admin');
-            }
-
-            // Create 2 members
-            for ($i = 1; $i <= 2; $i++) {
-                $member = User::create([
-                    'name' => 'Member ' . $i . ' ' . $company->name,
-                    'email' => 'member' . $i . $company->id . '@davella.com',
-                    'password' => Hash::make('password'),
-                    'company_id' => $company->id,
-                    'role' => 'member',
-                    'is_active' => true,
-                ]);
-                $member->assignRole('member');
-            }
-        }
+        // Create sales
+        $sales = User::create([
+            'name' => 'Sales User',
+            'email' => 'sales@davella.com',
+            'password' => Hash::make('password'),
+            'role' => 'sales',
+            'is_active' => true,
+        ]);
+        $sales->assignRole('sales');
     }
 }

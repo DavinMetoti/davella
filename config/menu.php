@@ -6,19 +6,13 @@ return [
             'name' => 'Dashboard',
             'icon' => 'fas fa-tachometer-alt',
             'route' => 'dashboard',
-            'permission' => null, // or specific permission
+            'permission' => 'Dashboard',
         ],
         [
             'name' => 'Users',
             'icon' => 'fas fa-users',
-            'route' => 'users.index', // assume route exists
+            'route' => 'users.index',
             'permission' => 'manage users',
-        ],
-        [
-            'name' => 'Companies',
-            'icon' => 'fas fa-building',
-            'route' => 'companies.index',
-            'permission' => 'manage companies',
         ],
         [
             'name' => 'Menus',
@@ -27,16 +21,28 @@ return [
             'permission' => 'manage menus',
         ],
         [
-            'name' => 'Clusters',
+            'name' => 'Cluster',
             'icon' => 'fas fa-home',
             'route' => 'clusters.index',
-            'permission' => 'manage clusters',
+            'permission' => 'Cluster',
         ],
         [
             'name' => 'Units',
             'icon' => 'fas fa-house-user',
             'route' => 'units.index',
-            'permission' => 'manage units',
+            'permission' => 'Units',
+        ],
+        [
+            'name' => 'Sales Report',
+            'icon' => 'fas fa-chart-line',
+            'route' => '#',
+            'permission' => 'sales report',
+        ],
+        [
+            'name' => 'Reservation',
+            'icon' => 'fas fa-calendar-check',
+            'route' => 'reservations.index',
+            'permission' => 'Reservation',
         ],
     ],
 ];

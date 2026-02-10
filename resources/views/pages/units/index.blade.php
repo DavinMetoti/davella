@@ -18,6 +18,7 @@
                 <th>House Type</th>
                 <th>Land Area</th>
                 <th>Building Area</th>
+                <th>Price</th>
                 <th>Progress</th>
                 <th>Status</th>
                 <th>Coordinates</th>

@@ -16,16 +16,13 @@ class PermissionSeeder extends Seeder
     {
         // Create permissions
         $permissions = [
-            'manage companies',
+            'Dashboard',
             'manage users',
-            'manage roles',
-            'manage permissions',
             'manage menus',
-            'view dashboard',
-            'manage sales',
-            'manage units',
-            'manage clusters',
-            'view reports',
+            'Cluster',
+            'Units',
+            'sales report',
+            'Reservation',
         ];
 
         foreach ($permissions as $permission) {
@@ -36,14 +33,12 @@ class PermissionSeeder extends Seeder
         $superAdminRole = Role::firstOrCreate(['name' => 'super_admin']);
         $superAdminRole->givePermissionTo($permissions);
 
-        // Create other roles if needed
-        $ownerRole = Role::firstOrCreate(['name' => 'owner']);
-        $ownerRole->givePermissionTo(['manage users', 'manage sales', 'manage units', 'manage clusters', 'view reports']);
+        // Create owner role
+        $ownerRole = Role::firstOrCreate(['name' => 'Owner']);
+        $ownerRole->givePermissionTo(['Dashboard', 'manage users', 'manage menus', 'Cluster', 'Units', 'sales report', 'Reservation']);
 
-        $adminRole = Role::firstOrCreate(['name' => 'admin']);
-        $adminRole->givePermissionTo(['manage users', 'manage sales', 'manage units', 'view reports']);
-
-        $memberRole = Role::firstOrCreate(['name' => 'member']);
-        $memberRole->givePermissionTo(['view dashboard', 'view reports']);
+        // Create sales role
+        $salesRole = Role::firstOrCreate(['name' => 'sales']);
+        $salesRole->givePermissionTo(['Dashboard', 'Cluster', 'Units', 'sales report', 'Reservation']);
     }
 }

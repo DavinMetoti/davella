@@ -6,8 +6,31 @@ import 'datatables.net-dt';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
+import Alpine from 'alpinejs';
+window.Alpine = Alpine;
+Alpine.start();
+
 import './bootstrap';
 import './components/sidebar';
+
+// Navbar mobile menu functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const hamburgerBtn = document.querySelector('.hamburger-btn');
+    const mobileMenu = document.querySelector('.mobile-menu');
+
+    if (hamburgerBtn && mobileMenu) {
+        hamburgerBtn.addEventListener('click', function() {
+            mobileMenu.classList.toggle('hidden');
+        });
+    }
+
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!hamburgerBtn.contains(event.target) && !mobileMenu.contains(event.target)) {
+            mobileMenu.classList.add('hidden');
+        }
+    });
+});
 
 // DataTable initialization
 window.initDataTable = function(selector, options = {}) {
@@ -47,8 +70,8 @@ $(document).ready(function() {
             columns = [
                 { data: 'name', name: 'name' },
                 { data: 'email', name: 'email' },
-                { data: 'role', name: 'role' },
-                { data: 'company_name', name: 'company_name' },
+                { data: 'role', name: 'role', orderable: false },
+                { data: 'is_active', name: 'is_active', orderable: false },
                 { data: 'actions', name: 'actions', orderable: false, searchable: false }
             ];
         } else if (url && url.includes('companies-api')) {
@@ -75,7 +98,6 @@ $(document).ready(function() {
                 { data: 'site_plan', name: 'site_plan', orderable: false },
                 { data: 'address', name: 'address' },
                 { data: 'price_range', name: 'price_range' },
-                { data: 'developer_name', name: 'developer_name' },
                 {
                     data: 'total_units',
                     name: 'total_units',
@@ -86,16 +108,31 @@ $(document).ready(function() {
                 { data: 'is_active_text', name: 'is_active' },
                 { data: 'actions', name: 'actions', orderable: false, searchable: false }
             ];
+        } else if (url && url.includes('reservations-api')) {
+            columns = [
+                { data: 'reservation_code', name: 'reservation_code', orderable: false },
+                { data: 'customer_info', name: 'customer_name', orderable: false },
+                { data: 'unit_info', name: 'unit_id', orderable: false },
+                { data: 'sales_info', name: 'sales_id', orderable: false },
+                { data: 'price_formatted', name: 'price_snapshot', orderable: false },
+                { data: 'booking_fee_formatted', name: 'booking_fee', orderable: false },
+                { data: 'dp_plan_formatted', name: 'dp_plan', orderable: false },
+                { data: 'status_badge', name: 'status', orderable: false },
+                { data: 'reservation_date_formatted', name: 'reservation_date' },
+                { data: 'expired_at_formatted', name: 'expired_at' },
+                { data: 'actions', name: 'actions', orderable: false, searchable: false }
+            ];
         } else if (url && url.includes('units-api')) {
             columns = [
                 { data: 'cluster_name', name: 'cluster_name' },
                 { data: 'name', name: 'name' },
                 { data: 'unit_code', name: 'unit_code' },
                 { data: 'house_type', name: 'house_type' },
-                { data: 'land_area_formatted', name: 'land_area' },
-                { data: 'building_area_formatted', name: 'building_area' },
-                { data: 'progress_percentage', name: 'progress' },
-                { data: 'status_badge', name: 'status' },
+                { data: 'land_area_formatted', name: 'land_area_formatted' },
+                { data: 'building_area_formatted', name: 'building_area_formatted' },
+                { data: 'price_formatted', name: 'price_formatted' },
+                { data: 'progress_percentage', name: 'progress_percentage' },
+                { data: 'status_badge', name: 'status_badge', orderable: false },
                 { data: 'coordinates_status', name: 'coordinates_status', orderable: false },
                 { data: 'actions', name: 'actions', orderable: false, searchable: false }
             ];
@@ -115,6 +152,15 @@ window.toggleDropdown = function(id) {
     });
     dropdown.classList.toggle('hidden');
 };
+
+// Event delegation for dropdown toggles
+$(document).on('click', '.dropdown-toggle', function(e) {
+    e.stopPropagation();
+    const menuId = $(this).data('menu-id');
+    if (menuId) {
+        toggleDropdown(menuId);
+    }
+});
 
 // Close dropdown when clicking outside
 document.addEventListener('click', function(event) {

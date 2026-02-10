@@ -75,7 +75,7 @@
         </div>
 
         <!-- Area Information -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
                 <label for="land_area" class="block text-sm font-semibold text-gray-700 mb-2">Land Area (m²)</label>
                 <input type="number" name="land_area" id="land_area" value="{{ old('land_area', $unit->land_area) }}" step="0.01"
@@ -90,6 +90,14 @@
                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2FA769] focus:border-[#2FA769] transition duration-200 bg-gray-50 focus:bg-white"
                        placeholder="90.00" required>
                 @error('building_area') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
+            </div>
+
+            <div>
+                <label for="price" class="block text-sm font-semibold text-gray-700 mb-2">Price (Rp)</label>
+                <input type="text" name="price" id="price" value="{{ old('price', $unit->price) }}"
+                       class="currency-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2FA769] focus:border-[#2FA769] transition duration-200 bg-gray-50 focus:bg-white"
+                       placeholder="500000000">
+                @error('price') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
             </div>
         </div>
 
@@ -282,6 +290,55 @@ document.addEventListener('DOMContentLoaded', function() {
         // Set coordinates
         coordinatesInput.value = xPercent.toFixed(4) + ',' + yPercent.toFixed(4);
         coordDisplay.textContent = (xPercent * 100).toFixed(2) + '%, ' + (yPercent * 100).toFixed(2) + '%';
+    });
+});
+
+// Currency formatting for price input
+document.addEventListener('DOMContentLoaded', function() {
+    const currencyInputs = document.querySelectorAll('.currency-input');
+
+    currencyInputs.forEach(input => {
+        // Format initial value if exists
+        if (input.value) {
+            let value = input.value.replace(/[^\d]/g, '');
+            input.dataset.rawValue = value; // Store raw value
+            input.value = 'Rp ' + parseInt(value).toLocaleString('id-ID');
+        }
+
+        input.addEventListener('focus', function() {
+            // Remove formatting for editing
+            this.dataset.rawValue = this.value.replace(/[^\d]/g, '');
+            this.value = this.dataset.rawValue;
+        });
+
+        input.addEventListener('input', function() {
+            // Real-time formatting and store raw value
+            let value = this.value.replace(/[^\d]/g, '');
+            this.dataset.rawValue = value;
+            if (value) {
+                this.value = 'Rp ' + parseInt(value).toLocaleString('id-ID');
+            } else {
+                this.value = '';
+            }
+        });
+
+        input.addEventListener('blur', function() {
+            // Ensure formatting on blur
+            let value = this.dataset.rawValue || '';
+            if (value) {
+                this.value = 'Rp ' + parseInt(value).toLocaleString('id-ID');
+            } else {
+                this.value = '';
+            }
+        });
+    });
+
+    // Strip formatting before form submit
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        currencyInputs.forEach(input => {
+            input.value = input.dataset.rawValue || '';
+        });
     });
 });
 </script>

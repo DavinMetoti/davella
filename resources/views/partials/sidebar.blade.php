@@ -9,7 +9,7 @@
             @foreach($menus as $menu)
                 @if(is_null($menu->permission) || auth()->user()->can($menu->permission->name ?? ''))
                     <li>
-                        <a href="{{ route($menu->route) }}" class="flex items-center py-2 px-4 rounded-lg {{ request()->routeIs($menu->route) ? 'bg-[#2FA769] text-white' : 'hover:bg-gray-200 transition duration-300' }}">
+                        <a href="{{ $menu->route === '#' ? '#' : route($menu->route) }}" class="flex items-center py-2 px-4 rounded-lg {{ ($menu->route !== '#' && request()->routeIs($menu->route)) ? 'bg-[#2FA769] text-white' : 'hover:bg-gray-200 transition duration-300' }}">
                             <i class="{{ $menu->icon }} mr-2"></i> {{ $menu->name }}
                         </a>
                         @if($menu->children->count() > 0)
@@ -17,7 +17,7 @@
                                 @foreach($menu->children as $child)
                                     @if(is_null($child->permission) || auth()->user()->can($child->permission->name ?? ''))
                                         <li>
-                                            <a href="{{ route($child->route) }}" class="flex items-center py-1 px-3 rounded {{ request()->routeIs($child->route) ? 'bg-[#2FA769] text-white' : 'hover:bg-gray-200 transition duration-300' }}">
+                                            <a href="{{ $child->route === '#' ? '#' : route($child->route) }}" class="flex items-center py-1 px-3 rounded {{ ($child->route !== '#' && request()->routeIs($child->route)) ? 'bg-[#2FA769] text-white' : 'hover:bg-gray-200 transition duration-300' }}">
                                                 <i class="{{ $child->icon }} mr-2 text-sm"></i> {{ $child->name }}
                                             </a>
                                         </li>

@@ -19,20 +19,6 @@
                        placeholder="Enter cluster name" required>
                 @error('name') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
             </div>
-
-            <div>
-                <label for="developer_id" class="block text-sm font-semibold text-gray-700 mb-2">Developer</label>
-                <select name="developer_id" id="developer_id"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2FA769] focus:border-[#2FA769] transition duration-200 bg-gray-50 focus:bg-white">
-                    <option value="">Select a developer company</option>
-                    @foreach(\App\Models\Company::active()->get() as $company)
-                        <option value="{{ $company->id }}" {{ old('developer_id') == $company->id ? 'selected' : '' }}>
-                            {{ $company->name }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('developer_id') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
-            </div>
         </div>
 
         <!-- Address and Description -->
@@ -135,18 +121,18 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <label for="price_range_min" class="block text-sm font-semibold text-gray-700 mb-2">Minimum Price</label>
-                <input type="number" name="price_range_min" id="price_range_min" value="{{ old('price_range_min') }}"
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2FA769] focus:border-[#2FA769] transition duration-200 bg-gray-50 focus:bg-white"
-                       min="0" step="1000000">
+                <input type="text" name="price_range_min" id="price_range_min" value="{{ old('price_range_min') }}"
+                       class="currency-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2FA769] focus:border-[#2FA769] transition duration-200 bg-gray-50 focus:bg-white"
+                       placeholder="0">
                 @error('price_range_min') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
                 <p class="text-xs text-gray-500 mt-1">Optional: Minimum price in Rupiah</p>
             </div>
 
             <div>
                 <label for="price_range_max" class="block text-sm font-semibold text-gray-700 mb-2">Maximum Price</label>
-                <input type="number" name="price_range_max" id="price_range_max" value="{{ old('price_range_max') }}"
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2FA769] focus:border-[#2FA769] transition duration-200 bg-gray-50 focus:bg-white"
-                       min="0" step="1000000">
+                <input type="text" name="price_range_max" id="price_range_max" value="{{ old('price_range_max') }}"
+                       class="currency-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2FA769] focus:border-[#2FA769] transition duration-200 bg-gray-50 focus:bg-white"
+                       placeholder="0">
                 @error('price_range_max') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
                 <p class="text-xs text-gray-500 mt-1">Optional: Maximum price in Rupiah</p>
             </div>
@@ -219,6 +205,55 @@ document.getElementById('site_plan').addEventListener('change', function(event) 
     } else {
         preview.classList.add('hidden');
     }
+});
+
+// Currency formatting for price inputs
+document.addEventListener('DOMContentLoaded', function() {
+    const currencyInputs = document.querySelectorAll('.currency-input');
+
+    currencyInputs.forEach(input => {
+        // Format initial value if exists
+        if (input.value) {
+            let value = input.value.replace(/[^\d]/g, '');
+            input.dataset.rawValue = value; // Store raw value
+            input.value = 'Rp ' + parseInt(value).toLocaleString('id-ID');
+        }
+
+        input.addEventListener('focus', function() {
+            // Remove formatting for editing
+            this.dataset.rawValue = this.value.replace(/[^\d]/g, '');
+            this.value = this.dataset.rawValue;
+        });
+
+        input.addEventListener('input', function() {
+            // Real-time formatting and store raw value
+            let value = this.value.replace(/[^\d]/g, '');
+            this.dataset.rawValue = value;
+            if (value) {
+                this.value = 'Rp ' + parseInt(value).toLocaleString('id-ID');
+            } else {
+                this.value = '';
+            }
+        });
+
+        input.addEventListener('blur', function() {
+            // Ensure formatting on blur
+            let value = this.dataset.rawValue || '';
+            if (value) {
+                this.value = 'Rp ' + parseInt(value).toLocaleString('id-ID');
+            } else {
+                this.value = '';
+            }
+        });
+    });
+
+    // Strip formatting before form submit
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        currencyInputs.forEach(input => {
+            input.value = input.dataset.rawValue || '';
+        });
+    });
 });
 </script>
 @endsection

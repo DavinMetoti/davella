@@ -16,7 +16,6 @@
                 <th>Site Plan</th>
                 <th>Address</th>
                 <th>Price Range</th>
-                <th>Developer</th>
                 <th>Units</th>
                 <th>Active</th>
                 <th>Actions</th>

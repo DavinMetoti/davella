@@ -30,23 +30,24 @@ class UserController extends Controller
         return DataTables::of($users)
             ->addColumn('role', function ($user) {
                 $role = $user->roles->first()->name ?? 'No Role';
-                $badgeClass = 'badge-primary';
-                if ($role === 'super_admin') $badgeClass = 'badge-danger';
-                else if ($role === 'admin') $badgeClass = 'badge-warning';
-                else if ($role === 'owner') $badgeClass = 'badge-success';
-                else if ($role === 'member') $badgeClass = 'badge-info';
-                return '<span class="badge ' . $badgeClass . '">' . ucfirst(str_replace('_', ' ', $role)) . '</span>';
+                $badgeClass = 'bg-gray-100 text-gray-800';
+                if ($role === 'super_admin') $badgeClass = 'bg-red-100 text-red-800';
+                else if ($role === 'Owner') $badgeClass = 'bg-blue-100 text-blue-800';
+                else if ($role === 'sales') $badgeClass = 'bg-green-100 text-green-800';
+                return '<span class="px-2 py-1 text-xs font-medium rounded-full ' . $badgeClass . '">' . ucfirst(str_replace('_', ' ', $role)) . '</span>';
             })
-            ->addColumn('company_name', function ($user) {
-                return $user->company ? $user->company->name : 'N/A';
+            ->addColumn('is_active', function ($user) {
+                return $user->is_active ? 
+                    '<span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Active</span>' : 
+                    '<span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Inactive</span>';
             })
             ->addColumn('actions', function ($user) {
                 return '
-                    <div class="relative">
+                    <div class="dropdown-actions relative">
                         <button class="text-gray-500 hover:text-gray-700 p-1 rounded" onclick="toggleDropdown(' . $user->id . ')">
                             <i class="fas fa-ellipsis-h"></i>
                         </button>
-                        <div id="dropdown-' . $user->id . '" class="absolute right-0 mt-1 w-32 bg-white border border-gray-200 rounded shadow-lg z-10 hidden">
+                        <div id="dropdown-' . $user->id . '" class="absolute right-0 mt-1 w-32 bg-white border border-gray-200 rounded shadow-lg z-50 hidden">
                             <a href="' . route('users.edit', $user) . '" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                 <i class="fas fa-edit mr-2 text-blue-500"></i> Edit
                             </a>
@@ -60,7 +61,7 @@ class UserController extends Controller
                     </div>
                 ';
             })
-            ->rawColumns(['role', 'actions'])
+            ->rawColumns(['role', 'is_active', 'actions'])
             ->make(true);
     }
 
@@ -75,15 +76,19 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'password' => 'required|string|min:8',
-            'company_id' => 'nullable|exists:companies,id',
-            'role' => 'nullable|string',
+            'role' => 'nullable|string|in:super_admin,Owner,sales',
             'is_active' => 'boolean',
         ]);
 
         $data = $request->all();
         $data['password'] = Hash::make($data['password']);
 
-        $this->userRepository->create($data);
+        $user = $this->userRepository->create($data);
+
+        // Assign role if provided
+        if (!empty($data['role'])) {
+            $user->assignRole($data['role']);
+        }
 
         return redirect()->route('users.index')->with('success', 'User created successfully.');
     }
@@ -106,8 +111,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $id,
             'password' => 'nullable|string|min:8',
-            'company_id' => 'nullable|exists:companies,id',
-            'role' => 'nullable|string',
+            'role' => 'nullable|string|in:super_admin,Owner,sales',
             'is_active' => 'boolean',
         ]);
 
@@ -121,6 +125,13 @@ class UserController extends Controller
         }
 
         $this->userRepository->update($user, $data);
+
+        // Update role if provided
+        if (!empty($data['role'])) {
+            $user->syncRoles([$data['role']]);
+        } else {
+            $user->syncRoles([]);
+        }
 
         return redirect()->route('users.index')->with('success', 'User updated successfully.');
     }

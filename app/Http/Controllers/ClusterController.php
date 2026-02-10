@@ -44,7 +44,6 @@ class ClusterController extends Controller
             'available_units' => 'nullable|integer|min:0',
             'price_range_min' => 'nullable|numeric|min:0',
             'price_range_max' => 'nullable|numeric|min:0',
-            'developer_id' => 'nullable|exists:companies,id',
             'year_built' => 'nullable|integer|min:1900|max:' . (date('Y') + 1),
             'facilities' => 'nullable|array',
             'is_active' => 'boolean',
@@ -64,10 +63,6 @@ class ClusterController extends Controller
         if (isset($data['facilities'])) {
             $data['facilities'] = json_encode($data['facilities']);
         }
-
-        // Set default values
-        $data['total_units'] = $data['total_units'] ?? 0;
-        $data['available_units'] = $data['available_units'] ?? 0;
 
         Cluster::create($data);
 
@@ -108,7 +103,6 @@ class ClusterController extends Controller
             'available_units' => 'nullable|integer|min:0',
             'price_range_min' => 'nullable|numeric|min:0',
             'price_range_max' => 'nullable|numeric|min:0',
-            'developer_id' => 'nullable|exists:companies,id',
             'year_built' => 'nullable|integer|min:1900|max:' . (date('Y') + 1),
             'facilities' => 'nullable|array',
             'is_active' => 'boolean',
@@ -176,9 +170,6 @@ class ClusterController extends Controller
             })
             ->addColumn('is_active_text', function ($cluster) {
                 return $cluster->is_active ? 'Yes' : 'No';
-            })
-            ->addColumn('developer_name', function ($cluster) {
-                return $cluster->developer ? $cluster->developer->name : 'Not set';
             })
             ->addColumn('actions', function ($cluster) {
                 return '

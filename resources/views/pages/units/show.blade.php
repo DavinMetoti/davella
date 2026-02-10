@@ -48,6 +48,16 @@
                     <p class="text-gray-900">{{ $unit->formatted_building_area }}</p>
                 </div>
                 <div>
+                    <label class="text-sm font-medium text-gray-500">Price</label>
+                    <p class="text-gray-900">
+                        @if($unit->price)
+                            Rp {{ number_format($unit->price, 0, ',', '.') }}
+                        @else
+                            Price not set
+                        @endif
+                    </p>
+                </div>
+                <div>
                     <label class="text-sm font-medium text-gray-500">Construction Progress</label>
                     <div class="mt-2">
                         <div class="flex justify-between text-sm text-gray-600 mb-1">

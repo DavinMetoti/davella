@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Unit extends Model
 {
@@ -18,6 +19,7 @@ class Unit extends Model
         'progress',
         'status',
         'coordinates',
+        'price',
     ];
 
     protected $casts = [
@@ -30,6 +32,11 @@ class Unit extends Model
     public function cluster(): BelongsTo
     {
         return $this->belongsTo(Cluster::class);
+    }
+
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(Reservation::class);
     }
 
     // Accessors

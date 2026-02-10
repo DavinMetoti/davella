@@ -35,17 +35,17 @@ class MenuController extends Controller
             })
             ->addColumn('actions', function ($menu) {
                 return '
-                    <div class="relative">
-                        <button class="text-gray-500 hover:text-gray-700 p-1 rounded" onclick="toggleDropdown(' . $menu->id . ')">
+                    <div class="relative dropdown-actions">
+                        <button type="button" class="text-gray-500 hover:text-gray-700 p-1 rounded focus:outline-none dropdown-toggle" data-menu-id="' . $menu->id . '">
                             <i class="fas fa-ellipsis-h"></i>
                         </button>
-                        <div id="dropdown-' . $menu->id . '" class="absolute right-0 mt-1 w-32 bg-white border border-gray-200 rounded shadow-lg z-10 hidden">
+                        <div id="dropdown-' . $menu->id . '" class="absolute right-0 mt-1 w-32 bg-white border border-gray-200 rounded shadow-lg z-50 hidden">
                             <a href="' . route('menus.edit', $menu) . '" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                 <i class="fas fa-edit mr-2 text-blue-500"></i> Edit
                             </a>
-                            <form method="POST" action="' . route('menus.destroy', $menu) . '" class="inline">
+                            <form method="POST" action="' . route('menus.destroy', $menu) . '" class="m-0">
                                 ' . csrf_field() . method_field('DELETE') . '
-                                <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:outline-none" onclick="return confirm(\'Are you sure you want to delete this menu?\')">
                                     <i class="fas fa-trash-alt mr-2 text-red-500"></i> Delete
                                 </button>
                             </form>

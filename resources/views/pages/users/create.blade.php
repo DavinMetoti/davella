@@ -48,28 +48,13 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-                <label for="company_id" class="block text-sm font-semibold text-gray-700 mb-2">Company</label>
-                <select name="company_id" id="company_id"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2FA769] focus:border-[#2FA769] transition duration-200 bg-gray-50 focus:bg-white">
-                    <option value="">No company assigned</option>
-                    @foreach(\App\Models\Company::active()->get() as $company)
-                        <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
-                            {{ $company->name }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('company_id') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
-            </div>
-
-            <div>
                 <label for="role" class="block text-sm font-semibold text-gray-700 mb-2">Role</label>
                 <select name="role" id="role"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2FA769] focus:border-[#2FA769] transition duration-200 bg-gray-50 focus:bg-white">
                     <option value="">Select a role</option>
-                    <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
-                    <option value="manager" {{ old('role') == 'manager' ? 'selected' : '' }}>Manager</option>
-                    <option value="user" {{ old('role') == 'user' ? 'selected' : '' }}>User</option>
-                    <option value="viewer" {{ old('role') == 'viewer' ? 'selected' : '' }}>Viewer</option>
+                    <option value="super_admin" {{ old('role') == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
+                    <option value="Owner" {{ old('role') == 'Owner' ? 'selected' : '' }}>Owner</option>
+                    <option value="sales" {{ old('role') == 'sales' ? 'selected' : '' }}>Sales</option>
                 </select>
                 @error('role') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
             </div>

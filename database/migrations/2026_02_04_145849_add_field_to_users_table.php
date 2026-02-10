@@ -13,13 +13,11 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
 
-            $table->foreignId('company_id')
+            $table->unsignedBigInteger('company_id')
                 ->nullable()
-                ->after('id')
-                ->constrained()
-                ->cascadeOnDelete();
+                ->after('id');
 
-            $table->enum('role', ['owner', 'admin', 'member'])
+            $table->enum('role', ['super_admin', 'Owner', 'sales'])
                 ->nullable()
                 ->after('password');
 
@@ -40,7 +38,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropConstrainedForeignId('company_id');
+            $table->dropColumn('company_id');
             $table->dropColumn([
                 'role',
                 'is_super_admin',
