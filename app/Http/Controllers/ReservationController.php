@@ -28,6 +28,14 @@ class ReservationController extends Controller
     {
         $reservations = Reservation::with(['unit.cluster', 'sales', 'creator']);
 
+        // Filter reservations based on user role
+        $user = Auth::user();
+        if ($user->hasRole('sales')) {
+            // Sales users can only see their own reservations
+            $reservations->where('sales_id', $user->id);
+        }
+        // Admin, Owner, and super_admin can see all reservations (no additional filter needed)
+
         return DataTables::of($reservations)
             ->addColumn('reservation_code', function ($reservation) {
                 return '<span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded">' . $reservation->reservation_code . '</span>';
@@ -193,6 +201,11 @@ class ReservationController extends Controller
      */
     public function show(Reservation $reservation): View
     {
+        // Check if user can access this reservation
+        if (!$this->canAccessReservation($reservation)) {
+            abort(403, 'Unauthorized access to reservation.');
+        }
+
         $reservation->load(['unit.cluster', 'sales', 'creator']);
         return view('pages.reservations.show', compact('reservation'));
     }
@@ -202,6 +215,11 @@ class ReservationController extends Controller
      */
     public function edit(Reservation $reservation): View
     {
+        // Check if user can access this reservation
+        if (!$this->canAccessReservation($reservation)) {
+            abort(403, 'Unauthorized access to reservation.');
+        }
+
         // Prevent editing confirmed reservations
         if ($reservation->status === 'confirmed') {
             return redirect()->route('reservations.index')
@@ -221,6 +239,11 @@ class ReservationController extends Controller
      */
     public function update(Request $request, Reservation $reservation): RedirectResponse
     {
+        // Check if user can access this reservation
+        if (!$this->canAccessReservation($reservation)) {
+            abort(403, 'Unauthorized access to reservation.');
+        }
+
         // Prevent updating confirmed reservations
         if ($reservation->status === 'confirmed') {
             return redirect()->route('reservations.index')
@@ -304,6 +327,11 @@ class ReservationController extends Controller
      */
     public function destroy(Reservation $reservation): RedirectResponse
     {
+        // Check if user can access this reservation
+        if (!$this->canAccessReservation($reservation)) {
+            abort(403, 'Unauthorized access to reservation.');
+        }
+
         // Prevent deleting confirmed reservations
         if ($reservation->status === 'confirmed') {
             return redirect()->route('reservations.index')
@@ -351,5 +379,26 @@ class ReservationController extends Controller
         }
 
         return (float) $cleaned;
+    }
+
+    /**
+     * Check if the current user can access the given reservation
+     */
+    private function canAccessReservation(Reservation $reservation): bool
+    {
+        $user = Auth::user();
+
+        // Admin, Owner, and super_admin can access all reservations
+        if ($user->hasRole(['super_admin', 'Owner'])) {
+            return true;
+        }
+
+        // Sales users can only access their own reservations
+        if ($user->hasRole('sales')) {
+            return $reservation->sales_id === $user->id;
+        }
+
+        // Default deny for other roles
+        return false;
     }
 }

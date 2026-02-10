@@ -7,7 +7,19 @@
     <div class="p-4">
         <ul class="space-y-2">
             @foreach($menus as $menu)
-                @if(is_null($menu->permission) || auth()->user()->can($menu->permission->name ?? ''))
+                @php
+                    $hasAccess = true;
+                    if ($menu->name === 'Sales Report') {
+                        // Special check for Sales Report - only super_admin and Owner can access
+                        $hasAccess = auth()->user()->hasRole(['super_admin', 'Owner']);
+                    } elseif ($menu->name === 'Menus') {
+                        // Special check for Menus - only super_admin can access
+                        $hasAccess = auth()->user()->hasRole('super_admin');
+                    } elseif (!is_null($menu->permission)) {
+                        $hasAccess = auth()->user()->can($menu->permission->name);
+                    }
+                @endphp
+                @if($hasAccess)
                     <li>
                         <a href="{{ $menu->route === '#' ? '#' : route($menu->route) }}" class="flex items-center py-2 px-4 rounded-lg {{ ($menu->route !== '#' && request()->routeIs($menu->route)) ? 'bg-[#2FA769] text-white' : 'hover:bg-gray-200 transition duration-300' }}">
                             <i class="{{ $menu->icon }} mr-2"></i> {{ $menu->name }}

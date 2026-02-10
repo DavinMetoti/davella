@@ -27,6 +27,13 @@ class UserController extends Controller
     {
         $users = $this->userRepository->getAll();
 
+        // Filter out super admin users for Owner role
+        if (auth()->user()->hasRole('Owner')) {
+            $users = $users->filter(function ($user) {
+                return !$user->hasRole('super_admin');
+            });
+        }
+
         return DataTables::of($users)
             ->addColumn('role', function ($user) {
                 $role = $user->roles->first()->name ?? 'No Role';
@@ -72,6 +79,11 @@ class UserController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        // Prevent Owner users from creating super admin users
+        if (auth()->user()->hasRole('Owner') && $request->role === 'super_admin') {
+            return redirect()->back()->withErrors(['role' => 'You do not have permission to create super admin users.'])->withInput();
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
@@ -96,17 +108,41 @@ class UserController extends Controller
     public function show($id): View
     {
         $user = $this->userRepository->findById($id);
+
+        // Prevent Owner users from viewing super admin users
+        if (auth()->user()->hasRole('Owner') && $user->hasRole('super_admin')) {
+            abort(403, 'You do not have permission to view super admin users.');
+        }
+
         return view('pages.users.show', compact('user'));
     }
 
     public function edit($id): View
     {
         $user = $this->userRepository->findById($id);
+
+        // Prevent Owner users from editing super admin users
+        if (auth()->user()->hasRole('Owner') && $user->hasRole('super_admin')) {
+            abort(403, 'You do not have permission to edit super admin users.');
+        }
+
         return view('pages.users.edit', compact('user'));
     }
 
     public function update(Request $request, $id): RedirectResponse
     {
+        $user = $this->userRepository->findById($id);
+
+        // Prevent Owner users from editing super admin users
+        if (auth()->user()->hasRole('Owner') && $user->hasRole('super_admin')) {
+            abort(403, 'You do not have permission to edit super admin users.');
+        }
+
+        // Prevent Owner users from assigning super admin role
+        if (auth()->user()->hasRole('Owner') && $request->role === 'super_admin') {
+            return redirect()->back()->withErrors(['role' => 'You do not have permission to assign super admin role.'])->withInput();
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $id,
@@ -115,7 +151,6 @@ class UserController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $user = $this->userRepository->findById($id);
         $data = $request->all();
 
         if (!empty($data['password'])) {
@@ -139,6 +174,12 @@ class UserController extends Controller
     public function destroy($id): RedirectResponse
     {
         $user = $this->userRepository->findById($id);
+
+        // Prevent Owner users from deleting super admin users
+        if (auth()->user()->hasRole('Owner') && $user->hasRole('super_admin')) {
+            abort(403, 'You do not have permission to delete super admin users.');
+        }
+
         $this->userRepository->delete($user);
 
         return redirect()->route('users.index')->with('success', 'User deleted successfully.');

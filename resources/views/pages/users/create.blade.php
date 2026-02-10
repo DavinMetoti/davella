@@ -52,7 +52,9 @@
                 <select name="role" id="role"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2FA769] focus:border-[#2FA769] transition duration-200 bg-gray-50 focus:bg-white">
                     <option value="">Select a role</option>
-                    <option value="super_admin" {{ old('role') == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
+                    @if(auth()->user()->hasRole('super_admin'))
+                        <option value="super_admin" {{ old('role') == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
+                    @endif
                     <option value="Owner" {{ old('role') == 'Owner' ? 'selected' : '' }}>Owner</option>
                     <option value="sales" {{ old('role') == 'sales' ? 'selected' : '' }}>Sales</option>
                 </select>

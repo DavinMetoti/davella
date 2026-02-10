@@ -53,9 +53,11 @@
                 <select name="role" id="role"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2FA769] focus:border-[#2FA769] transition duration-200 bg-gray-50 focus:bg-white">
                     <option value="">Select a role</option>
-                    <option value="super_admin" {{ old('role', $user->role) == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
-                    <option value="Owner" {{ old('role', $user->role) == 'Owner' ? 'selected' : '' }}>Owner</option>
-                    <option value="sales" {{ old('role', $user->role) == 'sales' ? 'selected' : '' }}>Sales</option>
+                    @if(auth()->user()->hasRole('super_admin'))
+                        <option value="super_admin" {{ old('role', $user->roles->first()->name ?? '') == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
+                    @endif
+                    <option value="Owner" {{ old('role', $user->roles->first()->name ?? '') == 'Owner' ? 'selected' : '' }}>Owner</option>
+                    <option value="sales" {{ old('role', $user->roles->first()->name ?? '') == 'sales' ? 'selected' : '' }}>Sales</option>
                 </select>
                 @error('role') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
             </div>
