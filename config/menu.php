@@ -44,5 +44,17 @@ return [
             'route' => 'reservations.index',
             'permission' => 'Reservation',
         ],
+        [
+            'name' => 'Customers',
+            'icon' => 'fas fa-user-friends',
+            'route' => 'customers.index',
+            'permission' => 'Customers',
+        ],
+        [
+            'name' => 'KPR Simulation',
+            'icon' => 'fas fa-calculator',
+            'route' => 'kpr-simulation.index',
+            'permission' => 'KPR Simulation',
+        ],
     ],
 ];

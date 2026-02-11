@@ -23,6 +23,8 @@ class PermissionSeeder extends Seeder
             'Units',
             'sales report',
             'Reservation',
+            'Customers',
+            'KPR Simulation',
         ];
 
         foreach ($permissions as $permission) {
@@ -35,10 +37,10 @@ class PermissionSeeder extends Seeder
 
         // Create owner role
         $ownerRole = Role::firstOrCreate(['name' => 'Owner']);
-        $ownerRole->givePermissionTo(['Dashboard', 'manage users', 'manage menus', 'Cluster', 'Units', 'sales report', 'Reservation']);
+        $ownerRole->givePermissionTo(['Dashboard', 'manage users', 'manage menus', 'Cluster', 'Units', 'sales report', 'Reservation', 'Customers', 'KPR Simulation']);
 
         // Create sales role
         $salesRole = Role::firstOrCreate(['name' => 'sales']);
-        $salesRole->givePermissionTo(['Dashboard', 'Cluster', 'Units', 'sales report', 'Reservation']);
+        $salesRole->givePermissionTo(['Dashboard', 'Cluster', 'Units', 'sales report', 'Reservation', 'Customers', 'KPR Simulation']);
     }
 }

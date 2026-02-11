@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ClusterController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MenuController;
@@ -29,6 +30,13 @@ Route::get('units-api', [UnitController::class, 'api'])->name('units.api')->midd
 
 Route::resource('reservations', App\Http\Controllers\ReservationController::class)->middleware('auth');
 Route::get('reservations-api', [App\Http\Controllers\ReservationController::class, 'api'])->name('reservations.api')->middleware('auth');
+
+Route::resource('customers', App\Http\Controllers\CustomerController::class)->middleware('auth');
+Route::get('customers-api', [App\Http\Controllers\CustomerController::class, 'api'])->name('customers.api')->middleware('auth');
+
+// KPR Simulation routes
+Route::get('/kpr-simulation', [App\Http\Controllers\KPRSimulationController::class, 'index'])->name('kpr-simulation.index');
+Route::post('/kpr-simulation/calculate', [App\Http\Controllers\KPRSimulationController::class, 'calculate'])->name('kpr-simulation.calculate');
 
 // Profile routes
 Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit')->middleware('auth');

@@ -32,6 +32,12 @@ class ClusterController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // Clean price fields by removing non-numeric characters
+        $request->merge([
+            'price_range_min' => $request->price_range_min ? preg_replace('/[^\d]/', '', $request->price_range_min) : null,
+            'price_range_max' => $request->price_range_max ? preg_replace('/[^\d]/', '', $request->price_range_max) : null,
+        ]);
+
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -91,6 +97,12 @@ class ClusterController extends Controller
      */
     public function update(Request $request, Cluster $cluster): RedirectResponse
     {
+        // Clean price fields by removing non-numeric characters
+        $request->merge([
+            'price_range_min' => $request->price_range_min ? preg_replace('/[^\d]/', '', $request->price_range_min) : null,
+            'price_range_max' => $request->price_range_max ? preg_replace('/[^\d]/', '', $request->price_range_max) : null,
+        ]);
+
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',

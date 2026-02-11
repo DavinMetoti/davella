@@ -79,6 +79,7 @@ class ReservationSeeder extends Seeder
                 'ktp_number' => rand(1000000000000000, 9999999999999999),
                 'sales_id' => $sales->id,
                 'payment_method' => $paymentMethods[array_rand($paymentMethods)],
+                'payment_plan' => ['lunas', 'kpr'][array_rand(['lunas', 'kpr'])],
                 'booking_fee' => rand(1000000, 5000000),
                 'dp_plan' => rand(10000000, 50000000),
                 'status' => $status,

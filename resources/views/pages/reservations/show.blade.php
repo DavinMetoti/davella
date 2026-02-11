@@ -155,6 +155,98 @@
             @endif
         </div>
 
+        <!-- KPR Information (if applicable) -->
+        @if($reservation->payment_plan === 'kpr')
+        <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">KPR Information</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Interest Type</label>
+                    <p class="mt-1 text-gray-900">{{ $reservation->interest_type ? ucfirst($reservation->interest_type) : '-' }}</p>
+                </div>
+
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Loan Term</label>
+                    <p class="mt-1 text-gray-900">{{ $reservation->loan_term ? $reservation->loan_term . ' Years' : '-' }}</p>
+                </div>
+
+                @if($reservation->interest_type === 'flat')
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Flat Interest Rate</label>
+                    <p class="mt-1 text-gray-900">{{ $reservation->flat_rate ? $reservation->flat_rate . '%' : '-' }}</p>
+                </div>
+                @endif
+
+                @if($reservation->interest_type === 'tiered' && $reservation->tiered_rates)
+                <div class="md:col-span-2">
+                    <label class="text-sm font-medium text-gray-500">Tiered Interest Rates</label>
+                    <div class="mt-1 space-y-2">
+                        @foreach($reservation->tiered_rates as $tier)
+                        <div class="flex items-center space-x-4 p-2 bg-gray-50 rounded">
+                            <span class="text-sm">Rate: {{ $tier['rate'] }}%</span>
+                            <span class="text-sm">Years: {{ $tier['years'] }}</span>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Loan Amount</label>
+                    <p class="mt-1 text-gray-900 font-medium">{{ $reservation->loan_amount ? 'Rp ' . number_format($reservation->loan_amount, 0, ',', '.') : '-' }}</p>
+                </div>
+
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Monthly Payment</label>
+                    <p class="mt-1 text-gray-900 font-medium">{{ $reservation->monthly_payment ? 'Rp ' . number_format($reservation->monthly_payment, 0, ',', '.') : '-' }}</p>
+                </div>
+
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Total Payment</label>
+                    <p class="mt-1 text-gray-900 font-medium">{{ $reservation->total_payment ? 'Rp ' . number_format($reservation->total_payment, 0, ',', '.') : '-' }}</p>
+                </div>
+
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Total Interest</label>
+                    <p class="mt-1 text-gray-900 font-medium">{{ $reservation->total_interest ? 'Rp ' . number_format($reservation->total_interest, 0, ',', '.') : '-' }}</p>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <!-- Remaining Amount Information -->
+        <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Payment Summary</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Payment Plan</label>
+                    <p class="mt-1 text-gray-900 font-medium">{{ $reservation->payment_plan ? ucfirst($reservation->payment_plan) : '-' }}</p>
+                </div>
+
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Remaining Amount to Pay</label>
+                    <p class="mt-1 text-gray-900 font-medium text-red-600">{{ $reservation->remaining_amount ? 'Rp ' . number_format($reservation->remaining_amount, 0, ',', '.') : '-' }}</p>
+                </div>
+            </div>
+
+            @if($reservation->payment_plan === 'kpr')
+            <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p class="text-sm text-blue-800">
+                    <strong>Note:</strong> The remaining amount represents the loan amount that will be financed through KPR.
+                    Monthly payments will be calculated based on the KPR terms above.
+                </p>
+            </div>
+            @elseif($reservation->payment_plan === 'lunas')
+            <div class="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <p class="text-sm text-green-800">
+                    <strong>Note:</strong> The remaining amount must be paid in full to complete the purchase.
+                </p>
+            </div>
+            @endif
+        </div>
+
         <!-- Sales & Creator Information -->
         <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
             <h2 class="text-xl font-semibold text-gray-800 mb-4">Sales & System Information</h2>

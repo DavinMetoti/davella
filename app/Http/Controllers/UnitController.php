@@ -106,6 +106,10 @@ class UnitController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $request->merge([
+            'price' => $request->price ? preg_replace('/[^\d]/', '', $request->price) : null,
+        ]);
+
         $request->validate([
             'cluster_id' => 'required|exists:clusters,id',
             'name' => 'required|string|max:255',

@@ -115,6 +115,7 @@ class ReservationController extends Controller
     {
         $units = Unit::available()->with('cluster')->get();
         $salesUsers = User::role('sales')->get();
+        $customers = \App\Models\Customer::orderBy('name')->get();
         $selectedUnit = null;
         $selectedSales = null;
         $isSales = false;
@@ -129,7 +130,7 @@ class ReservationController extends Controller
             $isSales = true;
         }
 
-        return view('pages.reservations.create', compact('units', 'salesUsers', 'selectedUnit', 'selectedSales', 'isSales'));
+        return view('pages.reservations.create', compact('units', 'salesUsers', 'customers', 'selectedUnit', 'selectedSales', 'isSales'));
     }
 
     /**
@@ -145,16 +146,39 @@ class ReservationController extends Controller
 
         $request->validate([
             'unit_id' => 'required|exists:units,id',
+            'customer_id' => 'nullable|exists:customers,id',
             'customer_name' => 'required|string|max:100',
             'customer_phone' => 'required|string|max:20',
             'ktp_number' => 'required|string|max:30',
             'sales_id' => 'required|exists:users,id',
             'payment_method' => 'nullable|string|max:20',
+            'payment_plan' => 'required|string|in:lunas,kpr',
             'booking_fee' => 'nullable|numeric|min:0',
+            'dp_plan_percentage' => 'nullable|integer|min:5|max:90',
             'dp_plan' => 'nullable|numeric|min:0',
             'reservation_date' => 'required|date',
             'expired_at' => 'required|date|after:reservation_date',
         ]);
+
+        // Additional validation for KPR
+        if ($request->payment_plan === 'kpr') {
+            $request->validate([
+                'interest_type' => 'required|in:flat,tiered',
+                'loan_term' => 'required|integer|min:1|max:30',
+            ]);
+
+            if ($request->interest_type === 'flat') {
+                $request->validate([
+                    'flat_rate' => 'required|numeric|min:0|max:100',
+                ]);
+            } else {
+                $request->validate([
+                    'tiered_rates' => 'required|array|min:1',
+                    'tiered_rates.*.rate' => 'required|numeric|min:0|max:100',
+                    'tiered_rates.*.years' => 'required|integer|min:1',
+                ]);
+            }
+        }
 
         $unit = Unit::findOrFail($request->unit_id);
 
@@ -167,6 +191,49 @@ class ReservationController extends Controller
             return back()->withErrors(['dp_plan' => 'DP plan cannot exceed unit price (Rp ' . number_format($unit->price, 0, ',', '.') . ')'])->withInput();
         }
 
+        $kprData = null;
+        if ($request->payment_plan === 'kpr') {
+            $kprController = new \App\Http\Controllers\KPRSimulationController();
+            $kprRequestData = [
+                'unit_id' => $request->unit_id,
+                'down_payment_percentage' => $request->dp_plan_percentage,
+                'down_payment_nominal' => $request->dp_plan,
+                'loan_term' => $request->loan_term,
+                'interest_type' => $request->interest_type,
+                'flat_rate' => $request->flat_rate,
+                'tiered_rates' => $request->tiered_rates,
+                'ajax' => true,
+            ];
+            $kprRequest = new Request($kprRequestData);
+            $response = $kprController->calculate($kprRequest);
+            $responseData = json_decode($response->getContent(), true);
+            if ($responseData['success']) {
+                $kprData = $responseData['data'];
+            } else {
+                return back()->withErrors($responseData['errors'])->withInput();
+            }
+        }
+
+        $remainingAmount = $unit->price - ($request->booking_fee ?? 0) - ($request->dp_plan ?? 0);
+
+        // Handle customer logic
+        $customerId = $request->customer_id;
+        if (!$customerId && $request->ktp_number) {
+            // Check if customer exists with this KTP
+            $existingCustomer = \App\Models\Customer::where('ktp_number', $request->ktp_number)->first();
+            if ($existingCustomer) {
+                $customerId = $existingCustomer->id;
+            } else {
+                // Create new customer
+                $newCustomer = \App\Models\Customer::create([
+                    'name' => $request->customer_name,
+                    'phone' => $request->customer_phone,
+                    'ktp_number' => $request->ktp_number,
+                ]);
+                $customerId = $newCustomer->id;
+            }
+        }
+
         // Generate reservation code - find the highest existing number
         $lastCode = Reservation::orderByRaw('CAST(SUBSTRING(reservation_code, 4) AS UNSIGNED) DESC')->value('reservation_code');
         $nextNumber = $lastCode ? intval(substr($lastCode, 3)) + 1 : 1;
@@ -177,6 +244,7 @@ class ReservationController extends Controller
             'reservation_date' => $request->reservation_date,
             'expired_at' => $request->expired_at,
             'unit_id' => $request->unit_id,
+            'customer_id' => $customerId,
             'price_snapshot' => $unit->price,
             'promo_snapshot' => null, // Can be extended later
             'customer_name' => $request->customer_name,
@@ -186,6 +254,16 @@ class ReservationController extends Controller
             'payment_method' => $request->payment_method,
             'booking_fee' => $request->booking_fee,
             'dp_plan' => $request->dp_plan,
+            'payment_plan' => $request->payment_plan,
+            'loan_amount' => $kprData ? (float) str_replace(['.', ','], ['', '.'], $kprData['loan_amount_formatted']) : null,
+            'interest_type' => $request->payment_plan === 'kpr' ? $request->interest_type : null,
+            'flat_rate' => $request->payment_plan === 'kpr' && $request->interest_type === 'flat' ? $request->flat_rate : null,
+            'tiered_rates' => $request->payment_plan === 'kpr' && $request->interest_type === 'tiered' ? $request->tiered_rates : null,
+            'loan_term' => $request->payment_plan === 'kpr' ? $request->loan_term : null,
+            'monthly_payment' => $kprData ? (float) str_replace(['.', ','], ['', '.'], $kprData['monthly_payment_formatted']) : null,
+            'total_payment' => $kprData ? (float) str_replace(['.', ','], ['', '.'], $kprData['total_payment_formatted']) : null,
+            'total_interest' => $kprData ? (float) str_replace(['.', ','], ['', '.'], $kprData['total_interest_formatted']) : null,
+            'remaining_amount' => $remainingAmount,
             'status' => 'pending',
             'created_by' => Auth::id(),
         ]);
@@ -230,8 +308,9 @@ class ReservationController extends Controller
             $query->available()->orWhere('id', $reservation->unit_id);
         })->with('cluster')->get();
         $salesUsers = User::role('sales')->get();
+        $customers = \App\Models\Customer::orderBy('name')->get();
 
-        return view('pages.reservations.edit', compact('reservation', 'units', 'salesUsers'));
+        return view('pages.reservations.edit', compact('reservation', 'units', 'salesUsers', 'customers'));
     }
 
     /**
@@ -258,12 +337,15 @@ class ReservationController extends Controller
 
         $request->validate([
             'unit_id' => 'required|exists:units,id',
+            'customer_id' => 'nullable|exists:customers,id',
             'customer_name' => 'required|string|max:100',
             'customer_phone' => 'required|string|max:20',
             'ktp_number' => 'required|string|max:30',
             'sales_id' => 'required|exists:users,id',
             'payment_method' => 'nullable|string|max:20',
+            'payment_plan' => 'required|string|in:lunas,kpr',
             'booking_fee' => 'nullable|numeric|min:0',
+            'dp_plan_percentage' => 'nullable|integer|min:5|max:90',
             'dp_plan' => 'nullable|numeric|min:0',
             'status' => 'required|string|in:pending,confirmed,cancelled,expired',
             'reservation_date' => 'required|date',
@@ -286,10 +368,29 @@ class ReservationController extends Controller
             return back()->withErrors(['dp_plan' => 'DP plan cannot exceed unit price (Rp ' . number_format($unit->price, 0, ',', '.') . ')'])->withInput();
         }
 
+        // Handle customer logic
+        $customerId = $request->customer_id;
+        if (!$customerId && $request->ktp_number) {
+            // Check if customer exists with this KTP
+            $existingCustomer = \App\Models\Customer::where('ktp_number', $request->ktp_number)->first();
+            if ($existingCustomer) {
+                $customerId = $existingCustomer->id;
+            } else {
+                // Create new customer
+                $newCustomer = \App\Models\Customer::create([
+                    'name' => $request->customer_name,
+                    'phone' => $request->customer_phone,
+                    'ktp_number' => $request->ktp_number,
+                ]);
+                $customerId = $newCustomer->id;
+            }
+        }
+
         $reservation->update([
             'reservation_date' => $request->reservation_date,
             'expired_at' => $request->expired_at,
             'unit_id' => $request->unit_id,
+            'customer_id' => $customerId,
             'customer_name' => $request->customer_name,
             'customer_phone' => $request->customer_phone,
             'ktp_number' => $request->ktp_number,
@@ -297,6 +398,7 @@ class ReservationController extends Controller
             'payment_method' => $request->payment_method,
             'booking_fee' => $request->booking_fee,
             'dp_plan' => $request->dp_plan,
+            'payment_plan' => $request->payment_plan,
             'status' => $request->status,
         ]);
 

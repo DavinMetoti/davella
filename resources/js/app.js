@@ -136,6 +136,17 @@ $(document).ready(function() {
                 { data: 'coordinates_status', name: 'coordinates_status', orderable: false },
                 { data: 'actions', name: 'actions', orderable: false, searchable: false }
             ];
+        } else if (url && url.includes('customers-api')) {
+            columns = [
+                { data: 'name', name: 'name' },
+                { data: 'phone', name: 'phone' },
+                { data: 'email', name: 'email' },
+                { data: 'ktp_number', name: 'ktp_number' },
+                { data: 'gender', name: 'gender' },
+                { data: 'address', name: 'address' },
+                { data: 'reservations_count', name: 'reservations_count', orderable: false },
+                { data: 'actions', name: 'actions', orderable: false, searchable: false }
+            ];
         }
 
         const options = url ? { ajax: url, columns: columns } : {};

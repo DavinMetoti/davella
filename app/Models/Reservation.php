@@ -12,6 +12,7 @@ class Reservation extends Model
         'reservation_date',
         'expired_at',
         'unit_id',
+        'customer_id',
         'price_snapshot',
         'promo_snapshot',
         'customer_name',
@@ -19,8 +20,18 @@ class Reservation extends Model
         'ktp_number',
         'sales_id',
         'payment_method',
+        'payment_plan',
         'booking_fee',
         'dp_plan',
+        'loan_amount',
+        'interest_type',
+        'flat_rate',
+        'tiered_rates',
+        'loan_term',
+        'monthly_payment',
+        'total_payment',
+        'total_interest',
+        'remaining_amount',
         'status',
         'created_by',
     ];
@@ -31,6 +42,13 @@ class Reservation extends Model
         'price_snapshot' => 'decimal:2',
         'booking_fee' => 'decimal:2',
         'dp_plan' => 'decimal:2',
+        'loan_amount' => 'decimal:2',
+        'flat_rate' => 'decimal:2',
+        'tiered_rates' => 'array',
+        'monthly_payment' => 'decimal:2',
+        'total_payment' => 'decimal:2',
+        'total_interest' => 'decimal:2',
+        'remaining_amount' => 'decimal:2',
         'promo_snapshot' => 'array',
     ];
 
@@ -38,6 +56,11 @@ class Reservation extends Model
     public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class);
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
     }
 
     public function sales(): BelongsTo

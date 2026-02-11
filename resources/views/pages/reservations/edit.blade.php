@@ -67,6 +67,24 @@
         <div class="border-t pt-6">
             <h3 class="text-lg font-semibold text-gray-800 mb-4">Customer Information</h3>
 
+            <!-- Customer Selection -->
+            <div class="mb-6">
+                <label for="customer_select" class="block text-sm font-semibold text-gray-700 mb-2">Select Existing Customer (Optional)</label>
+                <select name="customer_id" id="customer_select" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2FA769] focus:border-[#2FA769] transition duration-200 bg-gray-50 focus:bg-white">
+                    <option value="">Choose existing customer or fill manually below</option>
+                    @foreach($customers as $customer)
+                        <option value="{{ $customer->id }}"
+                                data-name="{{ $customer->name }}"
+                                data-phone="{{ $customer->phone }}"
+                                data-ktp="{{ $customer->ktp_number }}"
+                                {{ $reservation->customer_id == $customer->id ? 'selected' : '' }}>
+                            {{ $customer->name }} - {{ $customer->phone ?: 'No phone' }}
+                        </option>
+                    @endforeach
+                </select>
+                <p class="text-xs text-gray-500 mt-1">Selecting a customer will auto-fill the fields below</p>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label for="customer_name" class="block text-sm font-semibold text-gray-700 mb-2">Customer Name <span class="text-red-500">*</span></label>
@@ -134,6 +152,16 @@
                 </div>
 
                 <div>
+                    <label for="payment_plan" class="block text-sm font-semibold text-gray-700 mb-2">Payment Plan <span class="text-red-500">*</span></label>
+                    <select name="payment_plan" id="payment_plan" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2FA769] focus:border-[#2FA769] transition duration-200 bg-gray-50 focus:bg-white" required>
+                        <option value="">Select Payment Plan</option>
+                        <option value="lunas" {{ old('payment_plan', $reservation->payment_plan) == 'lunas' ? 'selected' : '' }}>Lunas (Full Payment)</option>
+                        <option value="kpr" {{ old('payment_plan', $reservation->payment_plan) == 'kpr' ? 'selected' : '' }}>KPR (Mortgage)</option>
+                    </select>
+                    @error('payment_plan') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
                     <label for="booking_fee" class="block text-sm font-semibold text-gray-700 mb-2">Booking Fee</label>
                     <input type="text" name="booking_fee" id="booking_fee" value="{{ old('booking_fee', $reservation->booking_fee) }}"
                            class="currency-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2FA769] focus:border-[#2FA769] transition duration-200 bg-gray-50 focus:bg-white"
@@ -142,10 +170,21 @@
                 </div>
 
                 <div>
-                    <label for="dp_plan" class="block text-sm font-semibold text-gray-700 mb-2">DP Plan</label>
-                    <input type="text" name="dp_plan" id="dp_plan" value="{{ old('dp_plan', $reservation->dp_plan) }}"
-                           class="currency-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2FA769] focus:border-[#2FA769] transition duration-200 bg-gray-50 focus:bg-white"
-                           placeholder="0">
+                    <label for="dp_plan" class="block text-sm font-semibold text-gray-700 mb-2">DP Plan (%)</label>
+                    <select name="dp_plan_percentage" id="dp_plan_percentage" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2FA769] focus:border-[#2FA769] transition duration-200 bg-gray-50 focus:bg-white">
+                        <option value="">Select DP Percentage</option>
+                        @for($i = 5; $i <= 90; $i += 5)
+                            <option value="{{ $i }}">{{ $i }}%</option>
+                        @endfor
+                    </select>
+                    <input type="hidden" name="dp_plan" id="dp_plan_hidden" value="{{ old('dp_plan', $reservation->dp_plan) }}">
+                    <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-blue-700">Calculated DP Amount:</span>
+                            <span class="text-lg font-bold text-blue-800" id="dp_amount_display">Rp {{ number_format($reservation->dp_plan ?? 0, 0, ',', '.') }}</span>
+                        </div>
+                        <p class="text-xs text-blue-600 mt-1">Amount will be calculated based on selected unit price × percentage</p>
+                    </div>
                     @error('dp_plan') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
@@ -210,6 +249,94 @@ document.addEventListener('DOMContentLoaded', function() {
             const rawValue = input.dataset.rawValue || '';
             input.value = rawValue; // Send raw numeric value to server
         });
+    });
+
+    // DP Plan calculation functionality
+    const unitSelect = document.getElementById('unit_id');
+    const dpPlanPercentageSelect = document.getElementById('dp_plan_percentage');
+    const dpPlanHiddenInput = document.getElementById('dp_plan_hidden');
+    const dpAmountDisplay = document.getElementById('dp_amount_display');
+
+    // Store unit prices (we'll need to get this from the selected option)
+    const unitPrices = {};
+    @foreach($units as $unit)
+        unitPrices[{{ $unit->id }}] = {{ $unit->price }};
+    @endforeach
+
+    function calculateDPAmount() {
+        const selectedUnitId = unitSelect.value;
+        const selectedPercentage = dpPlanPercentageSelect.value;
+
+        if (selectedUnitId && selectedPercentage && unitPrices[selectedUnitId]) {
+            const unitPrice = unitPrices[selectedUnitId];
+            const percentage = parseInt(selectedPercentage);
+            const dpAmount = Math.round(unitPrice * (percentage / 100));
+
+            dpPlanHiddenInput.value = dpAmount;
+            dpAmountDisplay.textContent = 'Rp ' + dpAmount.toLocaleString('id-ID');
+        } else {
+            dpPlanHiddenInput.value = '';
+            dpAmountDisplay.textContent = 'Rp 0';
+        }
+    }
+
+    unitSelect.addEventListener('change', calculateDPAmount);
+    dpPlanPercentageSelect.addEventListener('change', calculateDPAmount);
+
+    // Initialize DP display on page load
+    calculateDPAmount();
+
+    // Customer selection auto-fill functionality
+    const customerSelect = document.getElementById('customer_select');
+    const customerNameInput = document.getElementById('customer_name');
+    const customerPhoneInput = document.getElementById('customer_phone');
+    const ktpNumberInput = document.getElementById('ktp_number');
+
+    // Initialize form state based on current selection
+    if (customerSelect.value !== '') {
+        customerNameInput.disabled = true;
+        customerPhoneInput.disabled = true;
+        ktpNumberInput.disabled = true;
+        customerNameInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+        customerPhoneInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+        ktpNumberInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+        customerNameInput.classList.remove('bg-gray-50', 'focus:bg-white');
+        customerPhoneInput.classList.remove('bg-gray-50', 'focus:bg-white');
+        ktpNumberInput.classList.remove('bg-gray-50', 'focus:bg-white');
+    }
+
+    customerSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+
+        if (this.value === '') {
+            // Clear fields and enable all inputs if "Choose existing customer" is selected
+            customerNameInput.value = '';
+            customerPhoneInput.value = '';
+            ktpNumberInput.value = '';
+            customerNameInput.disabled = false;
+            customerPhoneInput.disabled = false;
+            ktpNumberInput.disabled = false;
+            customerNameInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            customerPhoneInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            ktpNumberInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            customerNameInput.classList.add('bg-gray-50', 'focus:bg-white');
+            customerPhoneInput.classList.add('bg-gray-50', 'focus:bg-white');
+            ktpNumberInput.classList.add('bg-gray-50', 'focus:bg-white');
+        } else {
+            // Auto-fill fields with selected customer data and disable all inputs
+            customerNameInput.value = selectedOption.getAttribute('data-name') || '';
+            customerPhoneInput.value = selectedOption.getAttribute('data-phone') || '';
+            ktpNumberInput.value = selectedOption.getAttribute('data-ktp') || '';
+            customerNameInput.disabled = true;
+            customerPhoneInput.disabled = true;
+            ktpNumberInput.disabled = true;
+            customerNameInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+            customerPhoneInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+            ktpNumberInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+            customerNameInput.classList.remove('bg-gray-50', 'focus:bg-white');
+            customerPhoneInput.classList.remove('bg-gray-50', 'focus:bg-white');
+            ktpNumberInput.classList.remove('bg-gray-50', 'focus:bg-white');
+        }
     });
 });
 </script>
